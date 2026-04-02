@@ -29,15 +29,26 @@ class Process implements Runnable {
     private int burstTime; // Total time the process requires to complete (in milliseconds)
     private int timeQuantum; // Time slice (time quantum) allowed per CPU access (in milliseconds)
     private int remainingTime; // Time left for the process to finish its execution
-    // Feature 1
-    private int priority;
+    
+    // Feature 1 Variable for Process Priority
+    private int priority; 
+
+    // Feature 3 Variables for Waiting Time Tracking
+    private long creationTime; 
+    private long waitingTime; 
+
     // Constructor to initialize the process with name, burst time, and time quantum
     public Process(String name, int burstTime, int timeQuantum) {
         this.name = name;
         this.burstTime = burstTime;
         this.timeQuantum = timeQuantum;
         this.remainingTime = burstTime; // Initially, remaining time is equal to the burst time 
-        this.priority = 1 + new Random().nextInt(5); // Assign random priority (Feature 1)         
+
+        this.priority = 1 + new Random().nextInt(5); // Feature 1 Assign random priority       
+        // Feature 3 Initialize waiting time tracking 
+        this.creationTime = System.currentTimeMillis();
+        this.waitingTime = 0;
+   
     }
 
     // This method will be called when the thread for this process is started
@@ -73,6 +84,10 @@ class Process implements Runnable {
         }
         
         remainingTime -= runTime; // Deduct the run time from the remaining time
+
+        waitingTime = System.currentTimeMillis() - creationTime; // Feature 3 Update waiting time
+
+
         int overallProgress = (int) (((double)(burstTime - remainingTime) / burstTime) * 100);
         String overallProgressBar = createProgressBar(overallProgress, 20);
         
@@ -144,10 +159,15 @@ class Process implements Runnable {
         return remainingTime <= 0;
     }
 
-    // Getter for Feature 1
+    // Feature 1 Getter for process priority
     public int getPriority() 
     {
     return priority;
+    }
+    // Feature 3 Getter for waiting time
+    public long getWaitingTime() 
+    {
+    return waitingTime;
     }
  }
 
@@ -286,7 +306,15 @@ public class SchedulerSimulation {
         System.out.println(Colors.BOLD + Colors.BRIGHT_GREEN + 
                           "╚════════════════════════════════════════════════════════════════════════════════╝" + 
                           Colors.RESET + "\n");
+                          
                           System.out.println(" Total context switches: " + contextSwitchCount); // Feature 2 Display total context switches
+                          
+                          // Feature 3 Display waiting time summary
+                          System.out.println("\nProcess Summary:");
+                            for (Process p : processMap.values()) 
+                                {
+                                    System.out.println(p.getName() + " | Burst Time: " + p.getBurstTime() + " | Waiting Time: " + p.getWaitingTime() + "ms");
+                                }
     }
     
     // Method to add a process to the queue and map, while printing a "ready" message
